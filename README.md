@@ -1,4 +1,4 @@
-# DOCID-Labs - TU Dublin
+# DOCID-Labs ---> TU Dublin
 
 Welcome to the DevOps Labs repository for TU Dublin. This repository contains materials for the DevOps course, including lecture notes, lab instructions, and resources.
 
@@ -10,6 +10,7 @@ The course is divided into several lectures, each focusing on a different aspect
 2. [Continuous Integration](./ContinuousIntegration)
 3. [Build Automation and Testing](./BuildAutomationAndTesting)
 4. [CodeQuality](./CodeQuality)
+5. [ContinuousDelivery](./ContinuousDelivery)
 
 ## Getting Started
 
