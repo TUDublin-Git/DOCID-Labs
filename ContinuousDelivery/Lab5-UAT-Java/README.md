@@ -50,7 +50,7 @@ Behavior-Driven Development (BDD) is a collaborative approach that helps teams c
 
 ## Prerequisites
 ✅ Required before starting:
-* Java JDK 17 installed
+* Java JDK 21 installed
 * Basic understanding of Java and testing concepts
 * IDE (VS Code or similar)
 * Terminal/Command Prompt access
@@ -82,7 +82,7 @@ Select these options when prompted (explanation of each choice included):
 2. Implementation language: Java
    (Sets up Java compilation and testing)
 
-3. Target Java version: 17
+3. Target Java version: 21
    (Latest LTS version with good feature support)
 
 4. Project name: [press Enter for default]

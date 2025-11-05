@@ -27,7 +27,7 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
+sourceCompatibility = '21'
 
 repositories {
     mavenCentral()
@@ -122,7 +122,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  javaVersion: '17'
+  javaVersion: '21'
 
 stages:
 - stage: Build

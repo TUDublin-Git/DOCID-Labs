@@ -14,9 +14,9 @@ In this lab, you will learn how to use Gradle for build automation and integrate
      - Look for an option labeled "Set or override JAVA_HOME variable" and select "Will be installed on local hard drive"
      - This will automatically set up the JAVA_HOME environment variable
 
-   **Note**: While we recommend the latest LTS version for new projects, be aware that some organizations might still use JDK 11 for legacy reasons. Always check project requirements.
+   **Note**: While we recommend the latest LTS version for new projects, be aware that some organizations might still use JDK 17 for legacy reasons. Always check project requirements.
 
-2. Gradle 7.0 or later (latest version recommended)
+2. Gradle 9.0 or later (latest version recommended)
    - Download from: https://gradle.org/install/#manually and follow instructions to:
    - Extract to a directory (e.g., C:\Gradle)
    - Add Gradle's bin directory to your PATH environment variable

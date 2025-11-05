@@ -20,6 +20,7 @@ To get started with the labs:
    - Visual Studio with Python support
    - Git for Windows
    - Any other tools specified in individual lab instructions
+   - Use JDK 17 or 21 as all labs were tested on these versions
 
 2. Clone this repository to your local machine:
    ```

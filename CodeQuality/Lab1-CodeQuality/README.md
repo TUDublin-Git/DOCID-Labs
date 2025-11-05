@@ -12,7 +12,7 @@ In this lab, we'll explore fundamental concepts of code quality and testing in J
 
 ### Prerequisites
 - VS Code installed with Java support
-- Java JDK 11 or later installed
+- Java JDK 21 or later installed
 - Git installed and configured
 - Basic understanding of Java programming
 

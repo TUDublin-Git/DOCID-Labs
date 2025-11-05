@@ -4,7 +4,7 @@
 ✅ Required before starting:
 - Azure DevOps account with permissions to create pipelines and environments
 - Git installed locally
-- Java JDK 17 installed
+- Java JDK 21 installed
 - Your Spring Boot application from previous labs
 - Basic understanding of HTTP and REST APIs
 - VSCode or preferred IDE
@@ -28,7 +28,7 @@ Key concepts you'll be working with:
 # Lab 3 - Part 1: Setting Up JMeter
 
 ## Prerequisites
-- Java JDK 17 installed
+- Java JDK 21 installed
 - Maven or Gradle installed
 - Your Spring Boot application from previous labs
 
@@ -359,7 +359,7 @@ In this lab, you will learn how to integrate JMeter performance tests into an Az
      vmImage: 'ubuntu-latest'
 
    variables:
-     javaVersion: '17'
+     javaVersion: '21'
 
    stages:
    - stage: Build
@@ -434,7 +434,7 @@ Add the following stage to your azure-pipelines.yml file:
               fi
               echo "Found JAR file: $JAR_FILE"
               
-              # Find Java 17 path
+              # Find Java 21 path
               JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
               echo "JAVA_HOME: $JAVA_HOME"
               
