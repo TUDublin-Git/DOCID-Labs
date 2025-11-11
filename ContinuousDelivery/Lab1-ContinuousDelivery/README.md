@@ -173,7 +173,7 @@ stages:
         jdkArchitectureOption: 'x64'
         jdkSourceOption: 'PreInstalled'
     
-    - task: Gradle@2
+    - task: Gradle@3
       inputs:
         workingDirectory: ''
         gradleWrapperFile: 'gradlew'
@@ -185,7 +185,7 @@ stages:
         testResultsFiles: '**/TEST-*.xml'
         tasks: 'bootJar'
 
-    - task: CopyFiles@3
+    - task: CopyFiles@2
       inputs:
         contents: '**/build/libs/*SNAPSHOT.jar'
         targetFolder: '$(build.artifactStagingDirectory)'
