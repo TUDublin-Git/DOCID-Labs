@@ -15,10 +15,10 @@ Based on your knowledge from previous labs about testing and code coverage:
 
 ```gradle
 plugins {
-    id 'java'
-    id 'org.springframework.boot' version '3.3.0'
-    id "org.sonarqube" version "5.1.0.4882"
-    id 'jacoco'  // Add JaCoCo plugin
+	id 'java'
+	id 'org.springframework.boot' version '3.3.0'
+	id "org.sonarqube" version "7.0.1.6134"
+	id 'jacoco'  // Add JaCoCo plugin
     id 'eclipse'  // Optional: for Eclipse integration
     id 'idea'    // Optional: for IntelliJ integration
 }
@@ -27,22 +27,32 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
+
+// Target Java 21 (LTS)
 sourceCompatibility = '21'
 
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
-    // Keep your existing dependencies
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.2.RELEASE'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    
-    // Add JUnit dependencies if needed (though Spring Boot starter test should include these)
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	// tag::security-dependencies[]
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	//  Temporary explicit version to fix Thymeleaf bug
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.2.RELEASE'
+	testImplementation 'org.springframework.security:spring-security-test'
+	// end::security-dependencies[]
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// Add JUnit dependencies if needed (though Spring Boot starter test should include these)
     testImplementation(platform('org.junit:junit-bom:5.11.3'))
     testImplementation('org.junit.jupiter:junit-jupiter')
     testRuntimeOnly('org.junit.platform:junit-platform-launcher')
@@ -154,7 +164,7 @@ stages:
           **/build/**
           **/build/reports/jacoco/**
         targetFolder: '$(Build.ArtifactStagingDirectory)'
-    
+
     - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
@@ -232,20 +242,7 @@ stages:
 ### Overview
 After implementing testing, coverage, and SonarQube analysis, we'll enhance our security posture by adding basic security scanning. This will help us identify potential security issues early in our development cycle.
 
-### Prerequisites
-- Completed Lab 2.1 and 2.2
-- Azure DevOps Organization admin rights (to install extensions)
-- Existing pipeline configuration
-
-### Step 1: Install Microsoft Security DevOps Extension
-1. Navigate to Azure DevOps Marketplace
-2. Search for "Microsoft Security DevOps for Azure DevOps"
-3. Install the extension to your organization
-4. Verify installation in Organization Settings > Extensions
-
-Why? This extension provides built-in security scanning tools and integrates seamlessly with Azure DevOps pipelines.
-
-### Step 2: Add Security Scanning Stage
+### Step 1: Add Security Scanning Stage
 For our Java Spring Boot application, let's implement basic security scanning:
 
 ```yaml
@@ -253,55 +250,81 @@ For our Java Spring Boot application, let's implement basic security scanning:
   displayName: 'Security Scanning'
   jobs:
   - job: SecurityCheck
+    displayName: 'Security Check'
+    pool:
+      vmImage: 'ubuntu-latest'
+
     steps:
-    # Download artifacts from previous build stage
+    # Make sure we have full git history so Gitleaks can scan commits
+    - checkout: self
+      fetchDepth: 0
+
+    # (Optional) still download build artifacts if you need them later
     - task: DownloadBuildArtifacts@0
+      displayName: 'Download build outputs'
       inputs:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'build-outputs'
         downloadPath: '$(System.DefaultWorkingDirectory)'
 
-    # Run security scanning
-    - task: MicrosoftSecurityDevOps@1
+    # --- Gitleaks: CredScan replacement ---
+    - task: Gitleaks@3
+      displayName: 'Gitleaks secret scan (CredScan replacement)'
       inputs:
-        categories: 'sources'  # Only scanning source code for now
-        break: false # Starting with false to avoid breaking builds
-        tools: 'credscan'    # Basic credential scanning
-        sourcePath: '$(System.DefaultWorkingDirectory)'
+        # Where to scan – normally your source repo
+        scanlocation: '$(Build.SourcesDirectory)'
+
+        # Use predefined config with CredScan rules ported in
+        configtype: 'predefined'
+        predefinedconfigfile: 'GitleaksUdmCombo.toml'
+        # Alt: 'UDMSecretChecksv8.toml' for “pure” CredScan rules
+
+        # Scan mode:
+        # - 'smart'    -> auto-detect best mode (PR, full, etc.)
+        # - 'all'      -> all commits
+        # - 'directory'-> only current files (no git history)
+        scanmode: 'smart'
+
+        # Task behaviour when secrets are found
+        taskfail: false                 # fail the task on findings
+        taskfailonexecutionerror: true # fail if Gitleaks crashes
+
+        # Reporting
+        reportformat: 'sarif'          # works with SARIF SAST tab
+        uploadresults: true
+        reportartifactname: 'CodeAnalysisLogs'
+        # reportfolder:  # default: agent temp
+        # reportname:    # default: gitleaks-<timestamp>.sarif
+
+        # Noise control
+        redact: true                   # hide secret values in logs
+        verbose: false                 # set true while tuning rules
+
 ```
 
-Understanding the configuration:
-- `categories`: Specifies what to scan. Options include:
-  - `sources`: Source code scanning (what we need for our Java project)
-  - `IaC`: Infrastructure as Code (not needed for our basic Java project)
-  - `containers`: Docker container scanning (not needed yet)
-
-- `break`: Whether to fail the build on findings (false for initial setup)
-
-- `tools`: Available security scanning tools:
-  - `credscan`: Scans for hardcoded credentials (relevant for any project)
-  
-  Other available tools (note platform limitations):
-  - `antimalware`: Windows agents only
-  - `bandit`: Python-specific scanning
-  - `binskim`: Windows/ELF binary scanning
-  - `checkov`, `terrascan`, `templateanalyzer`: Infrastructure as Code scanning
-  - `eslint`: JavaScript scanning
-  - `trivy`: Container and IaC scanning
-
-- `sourcePath`: Points to the root directory containing source code
-
+### Step 2: Install Gitleaks Extension
 Setup Requirements:
-1. Install the [Microsoft Security DevOps Extension](https://marketplace.visualstudio.com/items?itemName=MS-CST-E.MicrosoftSecurityDevOps) from Azure DevOps Marketplace
-2. Make sure your build agent has necessary permissions
+1. Before YAML will work:
+Install the Gitleaks extension in your Azure DevOps org from from Azure DevOps Marketplace (https://marketplace.visualstudio.com/items?itemName=Foxholenl.Gitleaks). 
+2. Make sure your job uses a normal agent (e.g. ubuntu-latest) and doesn’t have checkout: none.
+3. Optional but recommended: ensure full history is fetched if you want commit history scanning, by setting fetchDepth: 0. 
+
+Why these settings:
+1. configtype: 'predefined' + GitleaksUdmCombo.toml
+Uses a combo of Gitleaks default rules + CredScan-ported rules, which is closest to MSDO CredScan behavior. 
+2. scanmode: 'smart'
+Lets the task choose between PR-only, delta, or full scan depending on context. If you only ever want a flat file scan of the current checkout (no git history), switch to directory. 
+3. taskfail: false
+Makes the step will not fail when secrets are detected, which matches how you’d typically use credscan in a "break the build on secret" setup. You can relax this to false while tuning.
 
 Note: For Java-specific security scanning:
 1. We're already using SonarQube in another stage
 2. Consider adding Java-specific tools like OWASP Dependency Check later (covered in next step)
 3. Be aware of platform limitations when selecting security tools
 
-For complete tool list and configuration options, see [Microsoft Security DevOps documentation](https://github.com/microsoft/security-devops-azdevops).
+For complete tool list and configuration options, see [Azure DevOps GitLeaks documentation
+](https://github.com/JoostVoskuil/azure-devops-gitleaks).
 
 ### Step 3: Pipeline Integration
 Your stages should now flow like this:
@@ -334,14 +357,17 @@ Add this stage to your azure-pipelines.yml:
   - job: OWASPCheck
     steps:
     - task: dependency-check-build-task@6
-      inputs:
+	  inputs:
         projectName: '$(Build.Repository.Name)'
         scanPath: '$(System.DefaultWorkingDirectory)'
         format: 'HTML'
         uploadReports: true
         uploadSARIFReport: true
-        failOnCVSS: '7'
+        # failOnCVSS: '7' # <-- remove this line to avoid failing the job on high CVSS scores
         nvdApiKey: 'your-nvd-api-key'  # Replace with your API key
+        additionalArguments: >
+          --disableCentral
+          --disableOssIndex
 ```
 
 ### 4. Configuration Options Explained
@@ -397,16 +423,16 @@ Add this stage to your azure-pipelines.yml:
 1. Download OWASP Dependency Check:
    - Go to https://github.com/jeremylong/DependencyCheck/releases
    - Download latest release zip
-   - Extract the zip to a location (e.g., D:\Tools\dependency-check)
+   - Extract the zip to a location (e.g., C:\Tools\dependency-check)
 
 2. Create data directory:
-   - Create a folder for the database (e.g., D:\Tools\database)
+   - Create a folder for the database (e.g., C:\Tools\database)
 
 3. Download NVD Database:
    
    **For Windows:**
    ```cmd
-   D:\Tools\dependency-check\bin\dependency-check.bat --updateonly --nvdApiKey YOUR_API_KEY --data "D:\Tools\database"
+   C:\Tools\dependency-check\bin\dependency-check.bat --updateonly --nvdApiKey YOUR_API_KEY --data "C:\Tools\database"
    ```
 
    **For Linux/Mac:**
@@ -421,7 +447,7 @@ Add this stage to your azure-pipelines.yml:
    - Process is complete when command returns to prompt
 
 ### 4. Upload Database Files
-1. Navigate to your downloaded database files (e.g., D:\Temp\database)
+1. Navigate to your downloaded database files (e.g., C:\Temp\database)
 2. Select all files and folders
 3. Right-click > Send to > Compressed (zipped) folder
 4. Name it "nvd-db.zip"
