@@ -197,8 +197,9 @@ jmeter
    - Error rate (if any)
 
 ### 4.3 Save Results
-1. In View Results Tree, click "Save As" to save the results
-2. Save as `homepage-test-results.xml`
+1. In View Results Tree, click "Configure", select "Save as XML" and "Save Sampler Data (XML)"
+2. In the Filename input the path for the report and file to be savd as `homepage-test-results.xml`
+3. In JMeter GUI, click the green "Play" button again
 
 ## Practice Exercise
 1. Modify the Thread Group settings:
@@ -287,7 +288,7 @@ Content-Type shows 'text/plain' by default - this is fine for form parameters
 
 5. Add Response Assertion for Login:
    ```
-   Right-click Login Request → Add → Assertions → Response Assertion
+   Right-click Login Verification → Add → Assertions → Response Assertion
    Configure:
    - Field to Test: Response Code
    - Pattern to Test: 200
@@ -376,14 +377,15 @@ In this lab, you will learn how to integrate JMeter performance tests into an Az
 ### Part 2: Update Build Stage
 
 1. **Add Performance Test Files Copy**
-   Add the following task to your build stage in azure-pipelines.yml:
+   Add the following task to your build stage in azure-pipelines.yml (make sure it will be added after the reports CopyFiles task):
    ```yaml
+	# Add Performance Test Files Copy (JMX)
     - task: CopyFiles@2
       displayName: 'Copy jmx files'
       inputs:
-        sourceFolder: '$(Build.SourcesDirectory)'
-        contents: 'performance-tests/*.jmx'
-        targetFolder: '$(Build.ArtifactStagingDirectory)'
+        sourceFolder: '$(Build.SourcesDirectory)/performance-tests'
+        contents: '*.jmx'
+        targetFolder: '$(Build.ArtifactStagingDirectory)/performance-tests'
    ```
    This ensures your JMeter test files are included in the build artifacts.
 
@@ -400,6 +402,7 @@ In this lab, you will learn how to integrate JMeter performance tests into an Az
 Add the following stage to your azure-pipelines.yml file:
 
 ```yaml
+# Deployment and Performance Testing Stage
 - stage: Deploy
   jobs:
   - deployment: DeployJob
@@ -490,18 +493,18 @@ Add the following stage to your azure-pipelines.yml file:
             displayName: 'Run Homepage Test'
             inputs:
               script: |
-                jmeter -n -t $(Pipeline.Workspace)/build-outputs/performance-tests/homepage-test.jmx \
-                      -l $(Build.ArtifactStagingDirectory)/jmeter/homepage-results.jtl \
-                      -e -o $(Build.ArtifactStagingDirectory)/jmeter/homepage-dashboard
+                jmeter -n -t "$(System.ArtifactsDirectory)/build-outputs/performance-tests/homepage-test.jmx" \
+                -l "$(Build.ArtifactStagingDirectory)/jmeter/homepage-results.jtl" \
+                -e -o "$(Build.ArtifactStagingDirectory)/jmeter/homepage-dashboard"
 
           # Run Login Test
           - task: CmdLine@2
             displayName: 'Run Login Test'
             inputs:
               script: |
-                jmeter -n -t $(Pipeline.Workspace)/build-outputs/performance-tests/login-test.jmx \
-                      -l $(Build.ArtifactStagingDirectory)/jmeter/login-results.jtl \
-                      -e -o $(Build.ArtifactStagingDirectory)/jmeter/login-dashboard
+                jmeter -n -t "$(System.ArtifactsDirectory)/build-outputs/performance-tests/login-test.jmx" \
+                      -l "$(Build.ArtifactStagingDirectory)/jmeter/login-results.jtl" \
+                      -e -o "$(Build.ArtifactStagingDirectory)/jmeter/login-dashboard"
     
           # Publish Results
           - task: PublishBuildArtifacts@1
@@ -510,7 +513,11 @@ Add the following stage to your azure-pipelines.yml file:
               artifactName: 'jmeter-results'
 ```
 
-### Part 5: Review and Execute
+### Part 5: Install JMeter Extension
+Setup Requirements:
+Install the JMeter extension in your Azure DevOps org from from Azure DevOps Marketplace (https://marketplace.visualstudio.com/items?itemName=AlexandreGattiker.jmeter-tasks). 
+
+### Part 6: Review and Execute
 
 1. **Commit and push changes**
    ```bash
