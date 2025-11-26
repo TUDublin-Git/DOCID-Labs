@@ -34,7 +34,41 @@ This lab builds on the Spring Boot secure web application from previous labs. Ma
 
 ### 1. Verify Spring Boot Application
 
-First, ensure your Spring Boot application works:
+Verify your Grade version:
+
+`gradle-wrapper.properties`:
+```gradle
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-9.2.0-bin.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+```
+
+Verify your Java version:
+
+`build.gradle`:
+```gradle
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+```
+
+Refresh dependencies:
+
+```bash
+./gradlew clean
+./gradlew --refresh-dependencies
+```
+
+Next, ensure your Spring Boot application works:
 
 ```bash
 # Run the application
