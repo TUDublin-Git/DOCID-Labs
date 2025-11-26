@@ -166,6 +166,10 @@ Location: `app/src/main/java/org/example/App.java`
 package org.example;
 
 public class App {
+    public String getGreeting() {
+        return "Hello World!";
+    }
+
     // Basic arithmetic operations
     public int add(int a, int b) {
         return a + b;
@@ -199,17 +203,18 @@ public class App {
             System.out.println("3. Multiply");
             System.out.println("4. Divide");
             System.out.println("5. Exit");
-            
+
             System.out.print("Choose operation: ");
             int choice = scanner.nextInt();
-            
-            if (choice == 5) break;
-            
+
+            if (choice == 5)
+                break;
+
             System.out.print("Enter first number: ");
             int a = scanner.nextInt();
             System.out.print("Enter second number: ");
             int b = scanner.nextInt();
-            
+
             try {
                 switch (choice) {
                     case 1:
@@ -231,7 +236,7 @@ public class App {
                 System.out.println("Error: " + e.getMessage());
             }
         }
-        
+
         scanner.close();
     }
 }
@@ -442,4 +447,3 @@ app/build/reports/tests/test/index.html
 - Review assertion failures in test report
 - Check calculator implementation
 - Verify test data in feature file
-
