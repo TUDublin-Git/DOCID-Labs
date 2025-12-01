@@ -1,4 +1,4 @@
-# Lab 5b: BDD Testing with Behave (Python Version)
+# Lab 6: BDD Testing with Behave (Python Version)
 
 ## Introduction
 This lab implements the same BDD testing concepts as the Java/Cucumber lab, but using Python and Behave. The fundamental concepts remain the same:
